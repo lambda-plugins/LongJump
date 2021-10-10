@@ -13,14 +13,26 @@ internal object LongJump : PluginModule(
     private val farSpeed by setting("Speed", 1.0f, 0.0f..10.0f, 0.1f, description = "Long Jump Factor")
     private val disableOnRubberband by setting("Rubberband disable", false)
 
+    var has = false;
+
     init {
+
+        onEnable {
+            has = false
+        }
+
         safeListener<PlayerTravelEvent> {
 
-            if (mc.player.motionY == 0.0030162615090425808) {
+            if (mc.player.motionY <= 0 && !has) {
+
+                has = true
 
                 mc.player.jumpMovementFactor = farSpeed
 
             }
+
+            if (mc.player.onGround)
+                has = false
 
             if (LagNotifier.paused && disableOnRubberband) {
 
