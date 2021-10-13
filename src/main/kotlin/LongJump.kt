@@ -10,54 +10,42 @@ internal object LongJump : PluginModule(
     description = "Jump Longer",
     pluginMain = LongJumpController
 ) {
-    private val mode by setting("Mode", enumMode.Peak)
-    private val farSpeed by setting("Peak Speed", 1.0f, 0.0f..10.0f, 0.1f, { mode.equals(enumMode.Peak) }, description = "Speed When Falling")
-    private val groundSpeed by setting("Ground Speed", 2.0f, 0.0f..10.0f, 0.1f, { mode.equals(enumMode.Ground) }, description = "Speed When Jumping")
+    private val mode by setting("Mode", Mode.PEAK)
+    private val farSpeed by setting("Peak Speed", 1.0f, 0.0f..10.0f, 0.1f, { mode == Mode.PEAK }, description = "Speed When Falling")
+    private val groundSpeed by setting("Ground Speed", 2.0f, 0.0f..10.0f, 0.1f, { mode == Mode.GROUND }, description = "Speed When Jumping")
     private val disableOnRubberband by setting("Rubberband disable", false)
 
-    var has = false;
+    private var has = false
 
-    private enum class enumMode {
-
-        Peak,
-        Ground
-
+    private enum class Mode {
+        PEAK,
+        GROUND
     }
 
     init {
-
         onEnable {
             has = false
         }
 
         safeListener<PlayerTravelEvent> {
-
             if (LagNotifier.paused && disableOnRubberband) {
-
                 disable()
-
             }
 
-            if (mode.equals(enumMode.Peak)) {
-                if (mc.player.motionY <= 0 && !has) {
-
-                    has = true
-
-                    mc.player.jumpMovementFactor = farSpeed
-
+            when {
+                mode == Mode.PEAK -> {
+                    if (player.motionY <= 0 && !has) {
+                        has = true
+                        player.jumpMovementFactor = farSpeed
+                    }
+                    if (player.onGround) has = false
                 }
-
-                if (mc.player.onGround)
-                    has = false
-
-            } else if (mc.player.onGround) {
-
-                mc.player.jump();
-                mc.player.motionX *= groundSpeed
-                mc.player.motionY *= groundSpeed
-
+                player.onGround -> {
+                    player.jump()
+                    player.motionX *= groundSpeed
+                    player.motionY *= groundSpeed
+                }
             }
-
         }
     }
 }
